@@ -1,0 +1,571 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "StockAnalysis-ADF"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
+		"AzureDatabricksDeltaLake1_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'AzureDatabricksDeltaLake1'"
+		},
+		"BrickScrape_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'BrickScrape'"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://stocksdl.dfs.core.windows.net/"
+		},
+		"BrickScrape_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "1210-002419-z5z0f257"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Data Scrapping')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Databrickcs Scrape",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/ritikparate1@gmail.com/StockAnalysis/DataScrapping"
+						},
+						"linkedServiceName": {
+							"referenceName": "BrickScrape",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Scrapedata",
+						"type": "WebActivity",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {
+								"toto": "Authorization: Bearer <TOKEN>"
+							},
+							"url": "https://adb-2867397899264244.4.azuredatabricks.net/editor/notebooks/2398215638175819?o=2867397899264244#command/8126751852913964/api/2.0/clusters/spark-versions"
+						}
+					},
+					{
+						"name": "Silver Transformation",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Copy files from all folders",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 60,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "SilverTransformation",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"HistoryData": {},
+									"testsink": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Copy files from all folders",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get file names",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get file names').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "copy delta",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"wildcardFolderPath": {
+													"value": "@item().name",
+													"type": "Expression"
+												},
+												"wildcardFileName": {
+													"value": "*.parquet",
+													"type": "Expression"
+												},
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
+											}
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings",
+												"copyBehavior": "MergeFiles"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "Deltaread",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "sinksilver",
+											"type": "DatasetReference",
+											"parameters": {
+												"foldername": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Get file names",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "Databrickcs Scrape",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "getfoldernames",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "ParquetReadSettings"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-12-12T05:01:04Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/BrickScrape')]",
+				"[concat(variables('factoryId'), '/dataflows/SilverTransformation')]",
+				"[concat(variables('factoryId'), '/datasets/getfoldernames')]",
+				"[concat(variables('factoryId'), '/datasets/Deltaread')]",
+				"[concat(variables('factoryId'), '/datasets/sinksilver')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Deltaread')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "historical-data",
+						"fileSystem": "bronze"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/bronzehistorysink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "history",
+						"fileSystem": "bronze"
+					},
+					"compressionCodec": "none"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/getfoldernames')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "bronze"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sinksilver')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"foldername": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().foldername",
+							"type": "Expression"
+						},
+						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/stocksdl')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricksDeltaLake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLakeDataset",
+				"typeProperties": {
+					"database": "default",
+					"table": "stock_history_staging"
+				},
+				"schema": [
+					{
+						"name": "Date",
+						"type": "timestamp"
+					},
+					{
+						"name": "Open",
+						"type": "double"
+					},
+					{
+						"name": "High",
+						"type": "double"
+					},
+					{
+						"name": "Low",
+						"type": "double"
+					},
+					{
+						"name": "Close",
+						"type": "double"
+					},
+					{
+						"name": "Volume",
+						"type": "long"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricksDeltaLake1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricksDeltaLake1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLake",
+				"typeProperties": {
+					"domain": "https://adb-2867397899264244.4.azuredatabricks.net",
+					"clusterId": "1210-002419-z5z0f257",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDatabricksDeltaLake1_accessToken')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/BrickScrape')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-2867397899264244.4.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('BrickScrape_accessToken')]"
+					},
+					"existingClusterId": "[parameters('BrickScrape_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SilverTransformation')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "HistoryData"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "testsink"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RoundingValues"
+						},
+						{
+							"name": "AddCols"
+						},
+						{
+							"name": "SortingByDate"
+						},
+						{
+							"name": "AddPriceCols"
+						},
+						{
+							"name": "SevenDaysAvg"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Date as timestamp,",
+						"          Open as double,",
+						"          High as double,",
+						"          Low as double,",
+						"          Close as double,",
+						"          Volume as long",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'silver',",
+						"     folderPath: 'historical-data',",
+						"     fileName: 'data_ae94f806-aeb8-4d0a-a81d-22beeaabb7d1_dcf9dbbc-4f29-4fa9-a651-afeb3b931f87.parquet') ~> HistoryData",
+						"HistoryData derive(Open = round(Open, 2),",
+						"          High = round(High, 2),",
+						"          Low = round(Low, 2),",
+						"          Close = round(Close, 2)) ~> RoundingValues",
+						"RoundingValues derive(data_load_timestamp = currentTimestamp(),",
+						"          data_source = 'yfinance',",
+						"          is_valid = iif((isNull(Open) || isNull(Close) || isNull(High) || isNull(Low) || High < Low), false(), true()),",
+						"          Date = toDate(Date)) ~> AddCols",
+						"AddCols sort(asc(Date, true)) ~> SortingByDate",
+						"SevenDaysAvg derive({DayReturn%} = round((Close-Open) / Open*100,2),",
+						"          PriceChange = round(Close-Open,2),",
+						"          PriceRange = round(High-Low,2),",
+						"          AveragePrice = round((High + Low + Close) / 3,2)) ~> AddPriceCols",
+						"SortingByDate window(asc(Date, true),",
+						"     startRowOffset: -6L,",
+						"     endRowOffset: 0L,",
+						"     Avg7Days = round(avg(Close),2),",
+						"     rangeSpecified: true) ~> SevenDaysAvg",
+						"AddPriceCols sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'finalsink',",
+						"     folderPath: 'historical-data',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> testsink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		}
+	]
+}
