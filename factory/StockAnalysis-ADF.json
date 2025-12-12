@@ -1,0 +1,9 @@
+{
+	"name": "StockAnalysis-ADF",
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "61b34fcf-a3f2-4a19-8c7b-1191956e4b22",
+		"tenantId": "aa2128f0-7299-4d10-bfa7-e7c6ed05b224"
+	}
+}

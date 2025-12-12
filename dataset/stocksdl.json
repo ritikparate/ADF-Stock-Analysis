@@ -1,0 +1,42 @@
+{
+	"name": "stocksdl",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDatabricksDeltaLake1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureDatabricksDeltaLakeDataset",
+		"typeProperties": {
+			"database": "default",
+			"table": "stock_history_staging"
+		},
+		"schema": [
+			{
+				"name": "Date",
+				"type": "timestamp"
+			},
+			{
+				"name": "Open",
+				"type": "double"
+			},
+			{
+				"name": "High",
+				"type": "double"
+			},
+			{
+				"name": "Low",
+				"type": "double"
+			},
+			{
+				"name": "Close",
+				"type": "double"
+			},
+			{
+				"name": "Volume",
+				"type": "long"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
