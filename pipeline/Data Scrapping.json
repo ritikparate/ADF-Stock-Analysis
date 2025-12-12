@@ -47,6 +47,8 @@
 			{
 				"name": "Silver Transformation",
 				"type": "ExecuteDataFlow",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Copy files from all folders",
@@ -78,6 +80,8 @@
 			{
 				"name": "Copy files from all folders",
 				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Get file names",
