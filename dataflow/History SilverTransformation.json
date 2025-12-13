@@ -1,5 +1,5 @@
 {
-	"name": "SilverTransformation",
+	"name": "History SilverTransformation",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {

@@ -45,7 +45,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "SilverTransformation",
+						"referenceName": "History SilverTransformation",
 						"type": "DataFlowReference"
 					},
 					"compute": {
