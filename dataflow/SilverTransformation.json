@@ -9,7 +9,35 @@
 						"referenceName": "AzureDataLakeStorage1",
 						"type": "LinkedServiceReference"
 					},
-					"name": "HistoryData"
+					"name": "AppleHistory"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ModernHistory"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "NvidiaHistory"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OrientalHistory"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "TeslaHistory"
 				}
 			],
 			"sinks": [
@@ -39,6 +67,24 @@
 				},
 				{
 					"name": "AddingHourMIns"
+				},
+				{
+					"name": "UnionAll"
+				},
+				{
+					"name": "ModernaStockName"
+				},
+				{
+					"name": "NvidiaStockName"
+				},
+				{
+					"name": "OrientalStockName"
+				},
+				{
+					"name": "TeslaStockName"
+				},
+				{
+					"name": "AppleStockName"
 				}
 			],
 			"scriptLines": [
@@ -55,8 +101,31 @@
 				"     ignoreNoFilesFound: false,",
 				"     format: 'parquet',",
 				"     fileSystem: 'silver',",
-				"     folderPath: 'historical-data',",
-				"     fileName: 'data_ae94f806-aeb8-4d0a-a81d-22beeaabb7d1_dcf9dbbc-4f29-4fa9-a651-afeb3b931f87.parquet') ~> HistoryData",
+				"     folderPath: 'historical-data/Apple') ~> AppleHistory",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'silver',",
+				"     folderPath: 'historical-data/Moderna') ~> ModernHistory",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'silver',",
+				"     folderPath: 'historical-data/Nvidia') ~> NvidiaHistory",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'silver',",
+				"     folderPath: 'historical-data/Oriental') ~> OrientalHistory",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'silver',",
+				"     folderPath: 'historical-data/Tesla') ~> TeslaHistory",
 				"AddingHourMIns derive(Open = round(Open, 2),",
 				"          High = round(High, 2),",
 				"          Low = round(Low, 2),",
@@ -75,9 +144,15 @@
 				"     endRowOffset: 0L,",
 				"     Avg7Days = round(avg(Close),2),",
 				"     rangeSpecified: true) ~> SevenDaysAvg",
-				"HistoryData derive(Day = dayOfMonth(Date),",
+				"UnionAll derive(Day = dayOfMonth(Date),",
 				"          Month = month(Date),",
 				"          Hour = hour(Date)) ~> AddingHourMIns",
+				"AppleStockName, ModernaStockName, NvidiaStockName, OrientalStockName, TeslaStockName union(byName: true)~> UnionAll",
+				"ModernHistory derive(Stock = 'Moderna') ~> ModernaStockName",
+				"NvidiaHistory derive(Stock = 'Nvidia') ~> NvidiaStockName",
+				"OrientalHistory derive(Stock = 'Oriental') ~> OrientalStockName",
+				"TeslaHistory derive(Stock = 'Tesla') ~> TeslaStockName",
+				"AppleHistory derive(Stock = 'Apple') ~> AppleStockName",
 				"AddPriceCols sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
