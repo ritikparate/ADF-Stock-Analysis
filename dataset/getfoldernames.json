@@ -10,6 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"folderPath": "todays-data",
 				"fileSystem": "bronze"
 			},
 			"compressionCodec": "snappy"

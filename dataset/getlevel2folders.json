@@ -1,13 +1,14 @@
 {
-	"name": "sinksilver",
+	"name": "getlevel2folders",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureDataLakeStorage1",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"hisfolder": {
-				"type": "string"
+			"folder": {
+				"type": "string",
+				"defaultValue": "aa"
 			}
 		},
 		"annotations": [],
@@ -16,14 +17,13 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"folderPath": {
-					"value": "historical-data/@{dataset().hisfolder}",
+					"value": "@dataset().folder",
 					"type": "Expression"
 				},
-				"fileSystem": "silver"
+				"fileSystem": "bronze"
 			},
 			"compressionCodec": "snappy"
 		},
 		"schema": []
-	},
-	"type": "Microsoft.DataFactory/factories/datasets"
+	}
 }

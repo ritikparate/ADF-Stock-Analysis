@@ -18,7 +18,7 @@
 						"referenceName": "AzureDataLakeStorage1",
 						"type": "LinkedServiceReference"
 					},
-					"name": "testsink"
+					"name": "HistorySink"
 				}
 			],
 			"transformations": [
@@ -36,6 +36,9 @@
 				},
 				{
 					"name": "SevenDaysAvg"
+				},
+				{
+					"name": "AddingHourMIns"
 				}
 			],
 			"scriptLines": [
@@ -54,14 +57,14 @@
 				"     fileSystem: 'silver',",
 				"     folderPath: 'historical-data',",
 				"     fileName: 'data_ae94f806-aeb8-4d0a-a81d-22beeaabb7d1_dcf9dbbc-4f29-4fa9-a651-afeb3b931f87.parquet') ~> HistoryData",
-				"HistoryData derive(Open = round(Open, 2),",
+				"AddingHourMIns derive(Open = round(Open, 2),",
 				"          High = round(High, 2),",
 				"          Low = round(Low, 2),",
 				"          Close = round(Close, 2)) ~> RoundingValues",
 				"RoundingValues derive(data_load_timestamp = currentTimestamp(),",
 				"          data_source = 'yfinance',",
 				"          is_valid = iif((isNull(Open) || isNull(Close) || isNull(High) || isNull(Low) || High < Low), false(), true()),",
-				"          Date = toDate(Date)) ~> AddCols",
+				"          Date = toDate(Day)) ~> AddCols",
 				"AddCols sort(asc(Date, true)) ~> SortingByDate",
 				"SevenDaysAvg derive({DayReturn%} = round((Close-Open) / Open*100,2),",
 				"          PriceChange = round(Close-Open,2),",
@@ -72,6 +75,9 @@
 				"     endRowOffset: 0L,",
 				"     Avg7Days = round(avg(Close),2),",
 				"     rangeSpecified: true) ~> SevenDaysAvg",
+				"HistoryData derive(Day = dayOfMonth(Date),",
+				"          Month = month(Date),",
+				"          Hour = hour(Date)) ~> AddingHourMIns",
 				"AddPriceCols sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
@@ -85,7 +91,7 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> testsink"
+				"     skipDuplicateMapOutputs: true) ~> HistorySink"
 			]
 		}
 	}
