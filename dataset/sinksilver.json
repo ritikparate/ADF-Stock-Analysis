@@ -7,7 +7,8 @@
 		},
 		"parameters": {
 			"folder": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "as"
 			}
 		},
 		"annotations": [],
