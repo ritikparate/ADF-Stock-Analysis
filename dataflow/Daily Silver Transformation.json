@@ -1,0 +1,197 @@
+{
+	"name": "Daily Silver Transformation",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "AppleDaily"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ModernDaily"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "NvidiaDaily"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OrientalDaily"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "TeslaDaily"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "DailySink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "RoundingValues"
+				},
+				{
+					"name": "AddCols"
+				},
+				{
+					"name": "SortingByDate"
+				},
+				{
+					"name": "AddPriceCols"
+				},
+				{
+					"name": "AddingHourMIns"
+				},
+				{
+					"name": "UnionAll"
+				},
+				{
+					"name": "ModernaStockName"
+				},
+				{
+					"name": "NvidiaStockName"
+				},
+				{
+					"name": "OrientalStockName"
+				},
+				{
+					"name": "TeslaStockName"
+				},
+				{
+					"name": "AppleStockName"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Datetime as timestamp,",
+				"          Open as double,",
+				"          High as double,",
+				"          Low as double,",
+				"          Close as double,",
+				"          Volume as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'silver',",
+				"     folderPath: 'todays-data/Apple') ~> AppleDaily",
+				"source(output(",
+				"          Datetime as timestamp,",
+				"          Open as double,",
+				"          High as double,",
+				"          Low as double,",
+				"          Close as double,",
+				"          Volume as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'silver',",
+				"     folderPath: 'todays-data/Moderna') ~> ModernDaily",
+				"source(output(",
+				"          Datetime as timestamp,",
+				"          Open as double,",
+				"          High as double,",
+				"          Low as double,",
+				"          Close as double,",
+				"          Volume as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'silver',",
+				"     folderPath: 'todays-data/Nvidia') ~> NvidiaDaily",
+				"source(output(",
+				"          Datetime as timestamp,",
+				"          Open as double,",
+				"          High as double,",
+				"          Low as double,",
+				"          Close as double,",
+				"          Volume as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'silver',",
+				"     folderPath: 'todays-data/Oriental') ~> OrientalDaily",
+				"source(output(",
+				"          Datetime as timestamp,",
+				"          Open as double,",
+				"          High as double,",
+				"          Low as double,",
+				"          Close as double,",
+				"          Volume as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'silver',",
+				"     folderPath: 'todays-data/Tesla') ~> TeslaDaily",
+				"AddingHourMIns derive(Open = round(Open, 2),",
+				"          High = round(High, 2),",
+				"          Low = round(Low, 2),",
+				"          Close = round(Close, 2)) ~> RoundingValues",
+				"RoundingValues derive(data_load_timestamp = currentTimestamp(),",
+				"          data_source = 'yfinance',",
+				"          is_valid = iif((isNull(Open) || isNull(Close) || isNull(High) || isNull(Low) || High < Low), false(), true())) ~> AddCols",
+				"AddCols sort(asc(Datetime, true)) ~> SortingByDate",
+				"SortingByDate derive({DayReturn%} = round((Close-Open) / Open*100,2),",
+				"          PriceChange = round(Close-Open,2),",
+				"          PriceRange = round(High-Low,2),",
+				"          AveragePrice = round((High + Low + Close) / 3,2)) ~> AddPriceCols",
+				"UnionAll derive(Day = dayOfMonth(Datetime),",
+				"          Month = month(Datetime),",
+				"          Hour = hour(Datetime)) ~> AddingHourMIns",
+				"AppleStockName, ModernaStockName, NvidiaStockName, OrientalStockName, TeslaStockName union(byName: true)~> UnionAll",
+				"ModernDaily derive(Stock = 'Moderna') ~> ModernaStockName",
+				"NvidiaDaily derive(Stock = 'Nvidia') ~> NvidiaStockName",
+				"OrientalDaily derive(Stock = 'Oriental') ~> OrientalStockName",
+				"TeslaDaily derive(Stock = 'Tesla') ~> TeslaStockName",
+				"AppleDaily derive(Stock = 'Apple') ~> AppleStockName",
+				"AddPriceCols sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'finalsink',",
+				"     folderPath: 'daily-data',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     outputAssertFailedRows: true) ~> DailySink"
+			]
+		}
+	}
+}
