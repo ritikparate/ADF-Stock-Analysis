@@ -5,6 +5,8 @@
 			{
 				"name": "Historical Databrickcs",
 				"type": "DatabricksNotebook",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -23,36 +25,19 @@
 				}
 			},
 			{
-				"name": "Scrapedata",
-				"type": "WebActivity",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [],
+				"name": "History Silver Transformation",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ForEachCopy Historical",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"method": "GET",
-					"headers": {
-						"toto": "Authorization: Bearer <TOKEN>"
-					},
-					"url": "https://adb-2867397899264244.4.azuredatabricks.net/editor/notebooks/2398215638175819?o=2867397899264244#command/8126751852913964/api/2.0/clusters/spark-versions"
-				}
-			},
-			{
-				"name": "Silver Transformation",
-				"type": "ExecuteDataFlow",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 3,
 					"retryIntervalInSeconds": 60,
 					"secureOutput": false,
 					"secureInput": false
@@ -208,6 +193,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
