@@ -33,13 +33,13 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/Data Scrapping')]",
+			"name": "[concat(parameters('factoryName'), '/Daily Data')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Databrickcs Scrape",
+						"name": "Daily Databrickcs",
 						"type": "DatabricksNotebook",
 						"dependsOn": [],
 						"policy": {
@@ -51,7 +51,175 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"notebookPath": "/Users/ritikparate1@gmail.com/StockAnalysis/DataScrapping"
+							"notebookPath": "/Users/ritikparate1@gmail.com/StockAnalysis/Daily"
+						},
+						"linkedServiceName": {
+							"referenceName": "BrickScrape",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Get Daily Folder Names",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "Daily Databrickcs",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "getfoldernames",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "ParquetReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEachCopy Daily",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Daily Folder Names",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Daily Folder Names').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy delta Daily",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"wildcardFolderPath": {
+													"value": "todays-data/@{item().name}",
+													"type": "Expression"
+												},
+												"wildcardFileName": "*.parquet",
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
+											}
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings",
+												"copyBehavior": "MergeFiles"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "dailysource",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "dailysink",
+											"type": "DatasetReference",
+											"parameters": {
+												"foldername": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/BrickScrape')]",
+				"[concat(variables('factoryId'), '/datasets/getfoldernames')]",
+				"[concat(variables('factoryId'), '/datasets/dailysource')]",
+				"[concat(variables('factoryId'), '/datasets/dailysink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Historical Data')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Historical Databrickcs",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/ritikparate1@gmail.com/StockAnalysis/Historical"
 						},
 						"linkedServiceName": {
 							"referenceName": "BrickScrape",
@@ -83,14 +251,9 @@
 					{
 						"name": "Silver Transformation",
 						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Copy files from all folders",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 3,
@@ -106,7 +269,7 @@
 								"parameters": {},
 								"datasetParameters": {
 									"HistoryData": {},
-									"testsink": {}
+									"HistorySink": {}
 								}
 							},
 							"staging": {},
@@ -118,11 +281,27 @@
 						}
 					},
 					{
-						"name": "Copy files from all folders",
+						"name": "Setlevel1var",
+						"type": "SetVariable",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "parent",
+							"value": "[[object Object]"
+						}
+					},
+					{
+						"name": "ForEachCopy Historical",
 						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "Get file names",
+								"activity": "Get Historical names",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -131,7 +310,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('Get file names').output.childItems",
+								"value": "@activity('Get Historical names').output.childItems",
 								"type": "Expression"
 							},
 							"isSequential": true,
@@ -155,7 +334,7 @@
 												"type": "AzureBlobFSReadSettings",
 												"recursive": true,
 												"wildcardFolderPath": {
-													"value": "@item().name",
+													"value": "historical-data/@{item().name}/",
 													"type": "Expression"
 												},
 												"wildcardFileName": {
@@ -200,7 +379,7 @@
 											"referenceName": "sinksilver",
 											"type": "DatasetReference",
 											"parameters": {
-												"foldername": {
+												"hisfolder": {
 													"value": "@item().name",
 													"type": "Expression"
 												}
@@ -212,11 +391,11 @@
 						}
 					},
 					{
-						"name": "Get file names",
+						"name": "Get Historical names",
 						"type": "GetMetadata",
 						"dependsOn": [
 							{
-								"activity": "Databrickcs Scrape",
+								"activity": "Historical Databrickcs",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -232,7 +411,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataset": {
-								"referenceName": "getfoldernames",
+								"referenceName": "historicallist",
 								"type": "DatasetReference",
 								"parameters": {}
 							},
@@ -253,13 +432,21 @@
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
+				"variables": {
+					"parent": {
+						"type": "String"
+					},
+					"stock": {
+						"type": "String"
+					}
+				},
 				"annotations": [],
 				"lastPublishTime": "2025-12-12T05:01:04Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/BrickScrape')]",
 				"[concat(variables('factoryId'), '/dataflows/SilverTransformation')]",
-				"[concat(variables('factoryId'), '/datasets/getfoldernames')]",
+				"[concat(variables('factoryId'), '/datasets/historicallist')]",
 				"[concat(variables('factoryId'), '/datasets/Deltaread')]",
 				"[concat(variables('factoryId'), '/datasets/sinksilver')]"
 			]
@@ -315,6 +502,64 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/dailysink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"foldername": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "todays-data/@{dataset().foldername}",
+							"type": "Expression"
+						},
+						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dailysource')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "todays-data",
+						"fileSystem": "bronze"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/getfoldernames')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -328,6 +573,91 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
+						"folderPath": "todays-data",
+						"fileSystem": "bronze"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/getlevel2folders')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folder": {
+						"type": "string",
+						"defaultValue": "aa"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().folder",
+							"type": "Expression"
+						},
+						"fileSystem": "bronze"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/historicallist')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "historical-data",
+						"fileSystem": "bronze"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/insidefolderdaily')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "todays-data",
 						"fileSystem": "bronze"
 					},
 					"compressionCodec": "snappy"
@@ -348,7 +678,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
-					"foldername": {
+					"hisfolder": {
 						"type": "string"
 					}
 				},
@@ -358,7 +688,7 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"folderPath": {
-							"value": "@dataset().foldername",
+							"value": "historical-data/@{dataset().hisfolder}",
 							"type": "Expression"
 						},
 						"fileSystem": "silver"
@@ -492,7 +822,7 @@
 								"referenceName": "AzureDataLakeStorage1",
 								"type": "LinkedServiceReference"
 							},
-							"name": "testsink"
+							"name": "HistorySink"
 						}
 					],
 					"transformations": [
@@ -510,6 +840,9 @@
 						},
 						{
 							"name": "SevenDaysAvg"
+						},
+						{
+							"name": "AddingHourMIns"
 						}
 					],
 					"scriptLines": [
@@ -528,14 +861,14 @@
 						"     fileSystem: 'silver',",
 						"     folderPath: 'historical-data',",
 						"     fileName: 'data_ae94f806-aeb8-4d0a-a81d-22beeaabb7d1_dcf9dbbc-4f29-4fa9-a651-afeb3b931f87.parquet') ~> HistoryData",
-						"HistoryData derive(Open = round(Open, 2),",
+						"AddingHourMIns derive(Open = round(Open, 2),",
 						"          High = round(High, 2),",
 						"          Low = round(Low, 2),",
 						"          Close = round(Close, 2)) ~> RoundingValues",
 						"RoundingValues derive(data_load_timestamp = currentTimestamp(),",
 						"          data_source = 'yfinance',",
 						"          is_valid = iif((isNull(Open) || isNull(Close) || isNull(High) || isNull(Low) || High < Low), false(), true()),",
-						"          Date = toDate(Date)) ~> AddCols",
+						"          Date = toDate(Day)) ~> AddCols",
 						"AddCols sort(asc(Date, true)) ~> SortingByDate",
 						"SevenDaysAvg derive({DayReturn%} = round((Close-Open) / Open*100,2),",
 						"          PriceChange = round(Close-Open,2),",
@@ -546,6 +879,9 @@
 						"     endRowOffset: 0L,",
 						"     Avg7Days = round(avg(Close),2),",
 						"     rangeSpecified: true) ~> SevenDaysAvg",
+						"HistoryData derive(Day = dayOfMonth(Date),",
+						"          Month = month(Date),",
+						"          Hour = hour(Date)) ~> AddingHourMIns",
 						"AddPriceCols sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'delimited',",
@@ -559,7 +895,7 @@
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> testsink"
+						"     skipDuplicateMapOutputs: true) ~> HistorySink"
 					]
 				}
 			},
