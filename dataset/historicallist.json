@@ -1,29 +1,20 @@
 {
-	"name": "sinksilver",
+	"name": "historicallist",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureDataLakeStorage1",
 			"type": "LinkedServiceReference"
-		},
-		"parameters": {
-			"hisfolder": {
-				"type": "string"
-			}
 		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": {
-					"value": "historical-data/@{dataset().hisfolder}",
-					"type": "Expression"
-				},
-				"fileSystem": "silver"
+				"folderPath": "historical-data",
+				"fileSystem": "bronze"
 			},
 			"compressionCodec": "snappy"
 		},
 		"schema": []
-	},
-	"type": "Microsoft.DataFactory/factories/datasets"
+	}
 }

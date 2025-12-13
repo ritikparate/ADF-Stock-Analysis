@@ -71,101 +71,6 @@
 				}
 			},
 			{
-				"name": "Get first folder names",
-				"type": "GetMetadata",
-				"dependsOn": [
-					{
-						"activity": "Historical Databrickcs",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataset": {
-						"referenceName": "getfoldernames",
-						"type": "DatasetReference"
-					},
-					"fieldList": [
-						"childItems"
-					],
-					"storeSettings": {
-						"type": "AzureBlobFSReadSettings",
-						"recursive": true,
-						"enablePartitionDiscovery": false
-					},
-					"formatSettings": {
-						"type": "ParquetReadSettings"
-					}
-				}
-			},
-			{
-				"name": "Copy files from all folders level1",
-				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "Get first folder names",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('Get first folder names').output.childItems",
-						"type": "Expression"
-					},
-					"isSequential": true,
-					"activities": [
-						{
-							"name": "Get inside folder names",
-							"type": "GetMetadata",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"dataset": {
-									"referenceName": "getlevel2folders",
-									"type": "DatasetReference",
-									"parameters": {
-										"folder": {
-											"value": "@item().name",
-											"type": "Expression"
-										}
-									}
-								},
-								"fieldList": [
-									"childItems"
-								],
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							}
-						}
-					]
-				}
-			},
-			{
 				"name": "Setlevel1var",
 				"type": "SetVariable",
 				"state": "Inactive",
@@ -182,11 +87,11 @@
 				}
 			},
 			{
-				"name": "Copy files from all folders level2",
+				"name": "ForEachCopy Historical",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Copy files from all folders level1",
+						"activity": "Get Historical names",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -195,7 +100,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get inside folder names').output.childItems",
+						"value": "@activity('Get Historical names').output.childItems",
 						"type": "Expression"
 					},
 					"isSequential": true,
@@ -219,7 +124,7 @@
 										"type": "AzureBlobFSReadSettings",
 										"recursive": true,
 										"wildcardFolderPath": {
-											"value": "'historical-data'/@{item().name}/",
+											"value": "historical-data/@{item().name}/",
 											"type": "Expression"
 										},
 										"wildcardFileName": {
@@ -261,11 +166,53 @@
 							"outputs": [
 								{
 									"referenceName": "sinksilver",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"hisfolder": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						}
 					]
+				}
+			},
+			{
+				"name": "Get Historical names",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Historical Databrickcs",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "historicallist",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "ParquetReadSettings"
+					}
 				}
 			}
 		],

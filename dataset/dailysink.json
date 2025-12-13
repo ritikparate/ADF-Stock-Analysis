@@ -1,12 +1,12 @@
 {
-	"name": "sinksilver",
+	"name": "dailysink",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureDataLakeStorage1",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"hisfolder": {
+			"foldername": {
 				"type": "string"
 			}
 		},
@@ -16,7 +16,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"folderPath": {
-					"value": "historical-data/@{dataset().hisfolder}",
+					"value": "todays-data/@{dataset().foldername}",
 					"type": "Expression"
 				},
 				"fileSystem": "silver"
@@ -24,6 +24,5 @@
 			"compressionCodec": "snappy"
 		},
 		"schema": []
-	},
-	"type": "Microsoft.DataFactory/factories/datasets"
+	}
 }
