@@ -209,6 +209,8 @@
 					{
 						"name": "Historical Databrickcs",
 						"type": "DatabricksNotebook",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -227,36 +229,19 @@
 						}
 					},
 					{
-						"name": "Scrapedata",
-						"type": "WebActivity",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
-						"dependsOn": [],
+						"name": "History Silver Transformation",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "ForEachCopy Historical",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "GET",
-							"headers": {
-								"toto": "Authorization: Bearer <TOKEN>"
-							},
-							"url": "https://adb-2867397899264244.4.azuredatabricks.net/editor/notebooks/2398215638175819?o=2867397899264244#command/8126751852913964/api/2.0/clusters/spark-versions"
-						}
-					},
-					{
-						"name": "Silver Transformation",
-						"type": "ExecuteDataFlow",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 3,
 							"retryIntervalInSeconds": 60,
 							"secureOutput": false,
 							"secureInput": false
@@ -264,13 +249,18 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "SilverTransformation",
+								"referenceName": "History SilverTransformation",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
-									"HistoryData": {},
+									"AppleHistory": {},
+									"ModernHistory": {},
+									"NvidiaHistory": {},
+									"OrientalHistory": {},
+									"TeslaHistory": {},
 									"HistorySink": {}
-								}
+								},
+								"linkedServiceParameters": {}
 							},
 							"staging": {},
 							"compute": {
@@ -445,7 +435,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/BrickScrape')]",
-				"[concat(variables('factoryId'), '/dataflows/SilverTransformation')]",
+				"[concat(variables('factoryId'), '/dataflows/History SilverTransformation')]",
 				"[concat(variables('factoryId'), '/datasets/historicallist')]",
 				"[concat(variables('factoryId'), '/datasets/Deltaread')]",
 				"[concat(variables('factoryId'), '/datasets/sinksilver')]"
@@ -801,7 +791,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/SilverTransformation')]",
+			"name": "[concat(parameters('factoryName'), '/History SilverTransformation')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -813,7 +803,35 @@
 								"referenceName": "AzureDataLakeStorage1",
 								"type": "LinkedServiceReference"
 							},
-							"name": "HistoryData"
+							"name": "AppleHistory"
+						},
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "ModernHistory"
+						},
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "NvidiaHistory"
+						},
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "OrientalHistory"
+						},
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "TeslaHistory"
 						}
 					],
 					"sinks": [
@@ -843,6 +861,24 @@
 						},
 						{
 							"name": "AddingHourMIns"
+						},
+						{
+							"name": "UnionAll"
+						},
+						{
+							"name": "ModernaStockName"
+						},
+						{
+							"name": "NvidiaStockName"
+						},
+						{
+							"name": "OrientalStockName"
+						},
+						{
+							"name": "TeslaStockName"
+						},
+						{
+							"name": "AppleStockName"
 						}
 					],
 					"scriptLines": [
@@ -859,16 +895,38 @@
 						"     ignoreNoFilesFound: false,",
 						"     format: 'parquet',",
 						"     fileSystem: 'silver',",
-						"     folderPath: 'historical-data',",
-						"     fileName: 'data_ae94f806-aeb8-4d0a-a81d-22beeaabb7d1_dcf9dbbc-4f29-4fa9-a651-afeb3b931f87.parquet') ~> HistoryData",
+						"     folderPath: 'historical-data/Apple') ~> AppleHistory",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'silver',",
+						"     folderPath: 'historical-data/Moderna') ~> ModernHistory",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'silver',",
+						"     folderPath: 'historical-data/Nvidia') ~> NvidiaHistory",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'silver',",
+						"     folderPath: 'historical-data/Oriental') ~> OrientalHistory",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'silver',",
+						"     folderPath: 'historical-data/Tesla') ~> TeslaHistory",
 						"AddingHourMIns derive(Open = round(Open, 2),",
 						"          High = round(High, 2),",
 						"          Low = round(Low, 2),",
 						"          Close = round(Close, 2)) ~> RoundingValues",
 						"RoundingValues derive(data_load_timestamp = currentTimestamp(),",
 						"          data_source = 'yfinance',",
-						"          is_valid = iif((isNull(Open) || isNull(Close) || isNull(High) || isNull(Low) || High < Low), false(), true()),",
-						"          Date = toDate(Day)) ~> AddCols",
+						"          is_valid = iif((isNull(Open) || isNull(Close) || isNull(High) || isNull(Low) || High < Low), false(), true())) ~> AddCols",
 						"AddCols sort(asc(Date, true)) ~> SortingByDate",
 						"SevenDaysAvg derive({DayReturn%} = round((Close-Open) / Open*100,2),",
 						"          PriceChange = round(Close-Open,2),",
@@ -879,9 +937,15 @@
 						"     endRowOffset: 0L,",
 						"     Avg7Days = round(avg(Close),2),",
 						"     rangeSpecified: true) ~> SevenDaysAvg",
-						"HistoryData derive(Day = dayOfMonth(Date),",
+						"UnionAll derive(Day = dayOfMonth(Date),",
 						"          Month = month(Date),",
 						"          Hour = hour(Date)) ~> AddingHourMIns",
+						"AppleStockName, ModernaStockName, NvidiaStockName, OrientalStockName, TeslaStockName union(byName: true)~> UnionAll",
+						"ModernHistory derive(Stock = 'Moderna') ~> ModernaStockName",
+						"NvidiaHistory derive(Stock = 'Nvidia') ~> NvidiaStockName",
+						"OrientalHistory derive(Stock = 'Oriental') ~> OrientalStockName",
+						"TeslaHistory derive(Stock = 'Tesla') ~> TeslaStockName",
+						"AppleHistory derive(Stock = 'Apple') ~> AppleStockName",
 						"AddPriceCols sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'delimited',",
