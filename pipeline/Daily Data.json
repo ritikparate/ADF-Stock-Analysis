@@ -1,0 +1,65 @@
+{
+	"name": "Daily Data",
+	"properties": {
+		"activities": [
+			{
+				"name": "Daily Databrickcs",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/ritikparate1@gmail.com/StockAnalysis/Daily"
+				},
+				"linkedServiceName": {
+					"referenceName": "BrickScrape",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Get first folder names",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Daily Databrickcs",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "getfoldernames",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "ParquetReadSettings"
+					}
+				}
+			}
+		],
+		"annotations": []
+	}
+}

@@ -1,9 +1,9 @@
 {
-	"name": "Data Scrapping",
+	"name": "Historical Data",
 	"properties": {
 		"activities": [
 			{
-				"name": "Databrickcs Scrape",
+				"name": "Historical Databrickcs",
 				"type": "DatabricksNotebook",
 				"dependsOn": [],
 				"policy": {
@@ -15,7 +15,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Users/ritikparate1@gmail.com/StockAnalysis/DataScrapping"
+					"notebookPath": "/Users/ritikparate1@gmail.com/StockAnalysis/Historical"
 				},
 				"linkedServiceName": {
 					"referenceName": "BrickScrape",
@@ -75,7 +75,7 @@
 				"type": "GetMetadata",
 				"dependsOn": [
 					{
-						"activity": "Databrickcs Scrape",
+						"activity": "Historical Databrickcs",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -161,30 +161,6 @@
 									"type": "ParquetReadSettings"
 								}
 							}
-						},
-						{
-							"name": "Set variable1",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "Get inside folder names",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "stock",
-								"value": {
-									"value": "@activity('Get inside folder names').output.childItems",
-									"type": "Expression"
-								}
-							}
 						}
 					]
 				}
@@ -192,14 +168,9 @@
 			{
 				"name": "Setlevel1var",
 				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "Get first folder names",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
 				"policy": {
 					"secureOutput": false,
 					"secureInput": false
@@ -207,10 +178,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"variableName": "parent",
-					"value": {
-						"value": "@activity('Get first folder names').output.childItems",
-						"type": "Expression"
-					}
+					"value": "[object Object]"
 				}
 			},
 			{
@@ -219,12 +187,6 @@
 				"dependsOn": [
 					{
 						"activity": "Copy files from all folders level1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Setlevel1var",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -257,7 +219,7 @@
 										"type": "AzureBlobFSReadSettings",
 										"recursive": true,
 										"wildcardFolderPath": {
-											"value": "@{variables('parent')}/@{variables('stock')}",
+											"value": "'historical-data'/@{item().name}/",
 											"type": "Expression"
 										},
 										"wildcardFileName": {
@@ -293,29 +255,13 @@
 							"inputs": [
 								{
 									"referenceName": "Deltaread",
-									"type": "DatasetReference",
-									"parameters": {
-										"folder1": {
-											"value": "@variables('parent')",
-											"type": "Expression"
-										},
-										"folder2": {
-											"value": "@variables('stock')",
-											"type": "Expression"
-										}
-									}
+									"type": "DatasetReference"
 								}
 							],
 							"outputs": [
 								{
 									"referenceName": "sinksilver",
-									"type": "DatasetReference",
-									"parameters": {
-										"folder": {
-											"value": "@{variables('parent')}/@{variables('stock')}",
-											"type": "Expression"
-										}
-									}
+									"type": "DatasetReference"
 								}
 							]
 						}
