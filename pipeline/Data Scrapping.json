@@ -71,7 +71,7 @@
 				}
 			},
 			{
-				"name": "Get frist folder names",
+				"name": "Get first folder names",
 				"type": "GetMetadata",
 				"dependsOn": [
 					{
@@ -112,7 +112,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get frist folder names",
+						"activity": "Get first folder names",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -121,7 +121,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get frist folder names').output.childItems",
+						"value": "@activity('Get first folder names').output.childItems",
 						"type": "Expression"
 					},
 					"isSequential": true,
@@ -167,18 +167,19 @@
 							"type": "ForEach",
 							"dependsOn": [
 								{
+									"activity": "Setlevel1var",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
 									"activity": "Get inside folder names",
 									"dependencyConditions": [
 										"Succeeded"
 									]
 								}
 							],
-							"userProperties": [
-								{
-									"name": "parent",
-									"value": "aa"
-								}
-							],
+							"userProperties": [],
 							"typeProperties": {
 								"items": {
 									"value": "@activity('Get inside folder names').output.childItems",
@@ -205,7 +206,7 @@
 													"type": "AzureBlobFSReadSettings",
 													"recursive": true,
 													"wildcardFolderPath": {
-														"value": "@{activity('Get frist folder names').output.itemName}/@{item().name}",
+														"value": "@{variables('parent')}/@{item().name}",
 														"type": "Expression"
 													},
 													"wildcardFileName": {
@@ -241,17 +242,7 @@
 										"inputs": [
 											{
 												"referenceName": "Deltaread",
-												"type": "DatasetReference",
-												"parameters": {
-													"parent": {
-														"value": "@activity('Get frist folder names').output.itemName",
-														"type": "Expression"
-													},
-													"stock": {
-														"value": "@item().name",
-														"type": "Expression"
-													}
-												}
+												"type": "DatasetReference"
 											}
 										],
 										"outputs": [
@@ -259,10 +250,7 @@
 												"referenceName": "sinksilver",
 												"type": "DatasetReference",
 												"parameters": {
-													"folder": {
-														"value": "@item().name",
-														"type": "Expression"
-													}
+													"folder": "@{variables('parent')}/@{item().name}"
 												}
 											}
 										]
@@ -271,96 +259,31 @@
 							}
 						},
 						{
-							"name": "copy delta_copy1",
-							"type": "Copy",
-							"state": "Inactive",
-							"onInactiveMarkAs": "Succeeded",
+							"name": "Setlevel1var",
+							"type": "SetVariable",
 							"dependsOn": [],
 							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
 								"secureOutput": false,
 								"secureInput": false
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"source": {
-									"type": "ParquetSource",
-									"storeSettings": {
-										"type": "AzureBlobFSReadSettings",
-										"recursive": true,
-										"wildcardFolderPath": {
-											"value": "@item().name",
-											"type": "Expression"
-										},
-										"wildcardFileName": {
-											"value": "*.parquet",
-											"type": "Expression"
-										},
-										"enablePartitionDiscovery": false
-									},
-									"formatSettings": {
-										"type": "ParquetReadSettings"
-									}
-								},
-								"sink": {
-									"type": "ParquetSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings",
-										"copyBehavior": "MergeFiles"
-									},
-									"formatSettings": {
-										"type": "ParquetWriteSettings"
-									}
-								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
+								"variableName": "parent",
+								"value": {
+									"value": "@item().name",
+									"type": "Expression"
 								}
-							},
-							"inputs": [
-								{
-									"referenceName": "Deltaread",
-									"type": "DatasetReference",
-									"parameters": {
-										"parentfolder": {
-											"value": "@item().name",
-											"type": "Expression"
-										},
-										"stockfolder": {
-											"value": "@item()",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "sinksilver",
-									"type": "DatasetReference",
-									"parameters": {
-										"parent": {
-											"value": "@activity('Get frist folder names').output.itemName",
-											"type": "Expression"
-										},
-										"stock": {
-											"value": "@item().name",
-											"type": "Expression"
-										}
-									}
-								}
-							]
+							}
 						}
 					]
 				}
 			}
 		],
+		"variables": {
+			"parent": {
+				"type": "String"
+			}
+		},
 		"annotations": [],
 		"lastPublishTime": "2025-12-12T05:01:04Z"
 	},

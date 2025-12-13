@@ -5,23 +5,11 @@
 			"referenceName": "AzureDataLakeStorage1",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"parent": {
-				"type": "string"
-			},
-			"stock": {
-				"type": "string"
-			}
-		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": {
-					"value": "@{dataset().parent}/@{dataset().stock}",
-					"type": "Expression"
-				},
 				"fileSystem": "bronze"
 			},
 			"compressionCodec": "snappy"
