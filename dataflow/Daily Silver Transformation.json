@@ -54,8 +54,36 @@
 						"referenceName": "AzureDataLakeStorage1",
 						"type": "LinkedServiceReference"
 					},
-					"name": "GoldSink",
+					"name": "TeslaSink",
 					"description": "Sink for Gold Analysis"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "AppleSink"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ModernaSink"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "NvidiaSink"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OrientalSink"
 				}
 			],
 			"transformations": [
@@ -94,6 +122,33 @@
 				},
 				{
 					"name": "AggregateForAnalysis"
+				},
+				{
+					"name": "Apple"
+				},
+				{
+					"name": "AppleAgg"
+				},
+				{
+					"name": "Moderna"
+				},
+				{
+					"name": "ModernaAgg"
+				},
+				{
+					"name": "Nvidia"
+				},
+				{
+					"name": "NvidiaAgg"
+				},
+				{
+					"name": "Oriental"
+				},
+				{
+					"name": "OrientalAgg"
+				},
+				{
+					"name": "Tesla"
 				}
 			],
 			"scriptLines": [
@@ -188,7 +243,7 @@
 				"OrientalDaily derive(Stock = 'Oriental') ~> OrientalStockName",
 				"TeslaDaily derive(Stock = 'Tesla') ~> TeslaStockName",
 				"AppleDaily derive(Stock = 'Apple') ~> AppleStockName",
-				"AddPriceCols aggregate(groupBy(Stock,",
+				"Tesla aggregate(groupBy(Stock,",
 				"          Datetime),",
 				"     DailyOpen = first(Open),",
 				"          DailyClose = last(Close),",
@@ -196,6 +251,42 @@
 				"          DailyLow = min(Low),",
 				"          TotalVolume = sum(Volume),",
 				"          TradingMinutes = count(Datetime)) ~> AggregateForAnalysis",
+				"AddPriceCols filter(Stock == 'Apple') ~> Apple",
+				"Apple aggregate(groupBy(Datetime,",
+				"          Stock),",
+				"     DailyOpen = first(Open),",
+				"          DailyClose = last(Close),",
+				"          DailyHigh = max(High),",
+				"          DailyLow = min(Low),",
+				"          TotalVolume = sum(Volume),",
+				"          TradingMinutes = count(Datetime)) ~> AppleAgg",
+				"AddPriceCols filter(Stock=='Moderna') ~> Moderna",
+				"Moderna aggregate(groupBy(Datetime),",
+				"     DailyOpen = first(Open),",
+				"          DailyClose = last(Close),",
+				"          DailyHigh = max(High),",
+				"          DailyLow = min(Low),",
+				"          TotalVolume = sum(Volume),",
+				"          TotalMinutes = count(Datetime)) ~> ModernaAgg",
+				"AddPriceCols filter(Stock == 'Nvidia') ~> Nvidia",
+				"Nvidia aggregate(groupBy(Stock,",
+				"          Datetime),",
+				"     DailyOpen = first(Open),",
+				"          DailyClose = last(Close),",
+				"          DailyHigh = max(High),",
+				"          DailyLow = min(Low),",
+				"          TotalVolume = sum(Volume),",
+				"          TradedMinutes = count(Datetime)) ~> NvidiaAgg",
+				"AddPriceCols filter(Stock == 'Oriental') ~> Oriental",
+				"Oriental aggregate(groupBy(Stock,",
+				"          Datetime),",
+				"     DailyOpen = first(Open),",
+				"          DailyClose = last(Close),",
+				"          DailyHigh = max(High),",
+				"          DailyLow = min(Low),",
+				"          TotalVolume = sum(Volume),",
+				"          TradedMinutes = count(Datetime)) ~> OrientalAgg",
+				"AddPriceCols filter(Stock == 'Tesla') ~> Tesla",
 				"AddPriceCols sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
@@ -210,12 +301,13 @@
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     outputAssertFailedRows: true) ~> DailySink",
+				"     outputAssertFailedRows: true,",
+				"     partitionBy('hash', 1)) ~> DailySink",
 				"AggregateForAnalysis sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
 				"     fileSystem: 'gold',",
-				"     folderPath: 'daily-data',",
+				"     folderPath: 'daily-data/Tesla',",
 				"     columnDelimiter: ',',",
 				"     escapeChar: '\\\\',",
 				"     quoteChar: '\\\"',",
@@ -225,7 +317,67 @@
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> GoldSink"
+				"     partitionBy('hash', 1)) ~> TeslaSink",
+				"AppleAgg sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'gold',",
+				"     folderPath: 'daily-data/Apple',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> AppleSink",
+				"ModernaAgg sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'gold',",
+				"     folderPath: 'daily-data/Moderna',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ModernaSink",
+				"NvidiaAgg sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'gold',",
+				"     folderPath: 'daily-data/Nvidia',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> NvidiaSink",
+				"OrientalAgg sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'gold',",
+				"     folderPath: 'daily-data/Oriental',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> OrientalSink"
 			]
 		}
 	}
