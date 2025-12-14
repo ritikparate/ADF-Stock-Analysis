@@ -54,22 +54,6 @@
 				}
 			},
 			{
-				"name": "Setlevel1var",
-				"type": "SetVariable",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [],
-				"policy": {
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "parent",
-					"value": "[object Object]"
-				}
-			},
-			{
 				"name": "ForEachCopy Historical",
 				"type": "ForEach",
 				"dependsOn": [
