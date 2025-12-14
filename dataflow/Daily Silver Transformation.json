@@ -46,7 +46,16 @@
 						"referenceName": "AzureDataLakeStorage1",
 						"type": "LinkedServiceReference"
 					},
-					"name": "DailySink"
+					"name": "DailySink",
+					"description": "Sink for Business Use"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "GoldSink",
+					"description": "Sink for Gold Analysis"
 				}
 			],
 			"transformations": [
@@ -82,6 +91,9 @@
 				},
 				{
 					"name": "AppleStockName"
+				},
+				{
+					"name": "AggregateForAnalysis"
 				}
 			],
 			"scriptLines": [
@@ -176,6 +188,14 @@
 				"OrientalDaily derive(Stock = 'Oriental') ~> OrientalStockName",
 				"TeslaDaily derive(Stock = 'Tesla') ~> TeslaStockName",
 				"AppleDaily derive(Stock = 'Apple') ~> AppleStockName",
+				"AddPriceCols aggregate(groupBy(Stock,",
+				"          Datetime),",
+				"     DailyOpen = first(Open),",
+				"          DailyClose = last(Close),",
+				"          DailyHigh = max(High),",
+				"          DailyLow = min(Low),",
+				"          TotalVolume = sum(Volume),",
+				"          TradingMinutes = count(Datetime)) ~> AggregateForAnalysis",
 				"AddPriceCols sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
@@ -190,7 +210,22 @@
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     outputAssertFailedRows: true) ~> DailySink"
+				"     outputAssertFailedRows: true) ~> DailySink",
+				"AggregateForAnalysis sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'gold',",
+				"     folderPath: 'daily-data',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> GoldSink"
 			]
 		}
 	}
