@@ -91,3 +91,16 @@ From the screenshots, here's what happens in the Silver transformation:
 **2. Historical Data Transformations**
 <img width="900" height="350" alt="image" src="https://github.com/user-attachments/assets/e0a48b2a-6624-45a0-bdb3-91c202a4447c" />
 
+For details:
+1. **Union operations** combine data from multiple stock sources
+2. **Aggregate functions** calculate:
+   - Average prices (open, close, high, low)
+   - Total trading volumes
+   - Daily price ranges
+   - Count of trading days
+3. **Derived columns** add:
+   - Price change percentages
+   - Sector classifications
+   - Volatility indicators
+   - Price movement thresholds
+4. **Seperate Sink(Gold and Aggregated) in single Data Flow**
