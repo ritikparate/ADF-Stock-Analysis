@@ -80,3 +80,12 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 - Calculated fields: moving averages, price ranges, volume trends
 - Optimized for downstream analytics
 - Ready for consumption by BI tools or ML models
+
+### Key Transformations in Data Flows
+
+From the screenshots, here's what happens in the Silver transformation:
+1. Daily Data Transformations
+<img width="900 height="350" alt="image" src="https://github.com/user-attachments/assets/9452ec0c-dc48-4b51-9528-2d802130b830" />
+2. Historical Data Transformations
+<img width="900" height="350" alt="image" src="https://github.com/user-attachments/assets/e0a48b2a-6624-45a0-bdb3-91c202a4447c" />
+
