@@ -86,10 +86,10 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 From the screenshots, here's what happens in the Silver transformation:
 
 **1. Daily Data Transformations**
-<img width="900" height="350" alt="image" src="https://github.com/user-attachments/assets/fc546afe-1fab-4b84-a884-4ffc57be9369" />
+<img width="1200" height="600" alt="image" src="https://github.com/user-attachments/assets/fc546afe-1fab-4b84-a884-4ffc57be9369" />
 
 **2. Historical Data Transformations**
-<img width="900" height="350" alt="image" src="https://github.com/user-attachments/assets/e0a48b2a-6624-45a0-bdb3-91c202a4447c" />
+<img width="1200" height="600" alt="image" src="https://github.com/user-attachments/assets/e0a48b2a-6624-45a0-bdb3-91c202a4447c" />
 
 For details:
 1. **Union operations** combine data from multiple stock sources
@@ -123,4 +123,4 @@ Each stock gets its own transformation path in the data flow for parallel proces
 - **Trigger Condition**: Whenever Pipeline Failed Runs > 0
 - **Notification**: Email + Push notifications to action group
 - **Evaluation**: Monthly rate monitoring
-  <img width="900" height="300" alt="image" src="https://github.com/user-attachments/assets/eab1dd6d-9ac9-40f6-9fa5-c95a61dc447a" />
+  <img width="1200" height="600" alt="image" src="https://github.com/user-attachments/assets/eab1dd6d-9ac9-40f6-9fa5-c95a61dc447a" />
