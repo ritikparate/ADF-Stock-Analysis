@@ -84,6 +84,7 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 ### Key Transformations in Data Flows
 
 From the screenshots, here's what happens in the Silver transformation:
+
 **1. Daily Data Transformations**
 <img width="900" height="350" alt="image" src="https://github.com/user-attachments/assets/fc546afe-1fab-4b84-a884-4ffc57be9369" />
 
