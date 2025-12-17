@@ -28,7 +28,6 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 **Purpose**: Capture intraday stock movements
 <img width="900" height="300" alt="image" src="https://github.com/user-attachments/assets/333fbacd-ba7e-4e52-b7eb-4bc6fe069e3e" />
 
-
 **Flow**:
 1. **Databricks Notebook** fetches current-day data from yfinance
 2. Raw data lands in **Bronze Layer** (ADLS Gen2)
@@ -47,6 +46,7 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 ### 2. Historical Data Pipeline
 **Trigger**: Runs weekly  
 **Purpose**: Load 10 years of historical data for trend analysis
+<img width="900" height="300" alt="image" src="https://github.com/user-attachments/assets/38be767e-2143-4c21-90f9-7a0215a931ff" />
 
 **Flow**:
 1. **Databricks Notebook** fetches 10-year historical data
@@ -55,3 +55,28 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 4. **ForEach + Copy Data** activities process each ticker
 5. **Data Flow** performs transformations (similar to daily pipeline)
 6. Direct sink to **Gold Layer** (no intermediate backups for historical data)
+
+## Technical Implementation
+
+### Data Layers Explained
+
+**Bronze Layer (Raw)**
+- Unprocessed data exactly as received from yfinance
+- Removed some unnecessary columns
+- Partitioned by date and ticker symbol
+- Serves as source of truth for reprocessing
+
+**Silver Layer (Cleansed)**
+- Cleaned and validated data
+- Added columns like, Price change, Price Range for day, Volume, etc.
+- Applied transformations:
+  - Missing value handling
+  - Date type conversions
+  - Column renaming for consistency
+  - Outlier detection and flagging
+
+**Gold Layer (Business-Ready)**
+- Aggregated metrics per stock
+- Calculated fields: moving averages, price ranges, volume trends
+- Optimized for downstream analytics
+- Ready for consumption by BI tools or ML models
