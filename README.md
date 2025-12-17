@@ -104,3 +104,23 @@ For details:
    - Volatility indicators
    - Price movement thresholds
 4. **Seperate Sink(Gold and Aggregated) in single Data Flow**
+
+### Stocks Tracked
+Based on the data flow screenshot, the pipeline processes major stocks including:
+- Tesla (TSLA)
+- Nvidia (NVDA)
+- Apple (AAPL)
+- Moderna (MRNA)
+- Oriental Culture Holding (OCG)
+
+Each stock gets its own transformation path in the data flow for parallel processing.
+
+## Monitoring & Reliability
+
+### Alert Configuration
+- **Alert Rule**: "Daily Alert" monitors pipeline failures
+- **Severity**: Sev0 (highest priority)
+- **Trigger Condition**: Whenever Pipeline Failed Runs > 0
+- **Notification**: Email + Push notifications to action group
+- **Evaluation**: Monthly rate monitoring
+  <img width="900" height="300" alt="image" src="https://github.com/user-attachments/assets/eab1dd6d-9ac9-40f6-9fa5-c95a61dc447a" />
