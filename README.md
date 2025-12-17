@@ -11,3 +11,47 @@ Financial analysts and traders need clean, structured stock data for decision-ma
 ```
 yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) → ADLS Gen2 (Silver) → ADF Data Flows (Transformations) → ADLS Gen2 (Gold)
 ```
+
+### Components
+- **Data Source**: yfinance API (Python library for Yahoo Finance data)
+- **Ingestion Layer**: Azure Databricks notebooks
+- **Storage**: Azure Data Lake Storage Gen2
+- **Orchestration**: Azure Data Factory pipelines
+- **Transformation**: ADF Data Flows
+- **Triggers**: Azure DataFactory Triggers
+- **Monitoring**: Azure Monitor with email alerts
+
+## Pipeline Architecture
+
+### 1. Daily Data Pipeline
+**Trigger**: Runs every 2 minutes  
+**Purpose**: Capture intraday stock movements
+<img width="900" height="300" alt="image" src="https://github.com/user-attachments/assets/333fbacd-ba7e-4e52-b7eb-4bc6fe069e3e" />
+
+
+**Flow**:
+1. **Databricks Notebook** fetches current-day data from yfinance
+2. Raw data lands in **Bronze Layer** (ADLS Gen2)
+3. **Get Metadata activity** retrieves folder names for processing
+4. **ForEach loop** processes each stock ticker individually
+5. **Copy Data activities** separate stocks into individual containers
+6. **Data Flow** applies transformations:
+   - Date formatting and standardization
+   - Aggregations (avg, sum, count, range calculations)
+   - Business logic filters
+   - Custom flags for trading signals
+7. Transformed data written to **Silver Layer**
+8. Final curated datasets stored in **Gold Layer**
+9. Complete dataset backup maintained in **Final Sink** container
+
+### 2. Historical Data Pipeline
+**Trigger**: Runs weekly  
+**Purpose**: Load 10 years of historical data for trend analysis
+
+**Flow**:
+1. **Databricks Notebook** fetches 10-year historical data
+2. Data stored in Bronze Layer by ticker
+3. **Get Metadata** retrieves all historical folders
+4. **ForEach + Copy Data** activities process each ticker
+5. **Data Flow** performs transformations (similar to daily pipeline)
+6. Direct sink to **Gold Layer** (no intermediate backups for historical data)
