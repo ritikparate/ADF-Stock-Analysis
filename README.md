@@ -7,6 +7,25 @@ Built this to get hands dirty with Azure's data engineering stack while transiti
 ## Problem Statement
 Financial analysts and traders need clean, structured stock data for decision-making. Manually collecting and processing this data from multiple sources is time-consuming and error-prone. This pipeline automates the entire workflow—from data extraction to creating analysis-ready datasets.
 
+## Project Structure
+```
+stock-analysis-adf/
+├── databricks-notebooks/
+│   ├── daily_stock_fetch.ipynb
+│   └── historical_stock_fetch.ipynb
+├── adf-pipelines/
+│   ├── Daily_Data_Pipeline.json
+│   └── Historical_Data_Pipeline.json
+├── data-flows/
+│   ├── Daily_Silver_Transformation.json
+│   └── History_Silver_Transformation.json
+├── adls-structure/
+│   ├── bronze/
+│   ├── silver/
+│   ├── gold/
+│   └── final-sink/
+```
+
 ### High-Level Data Flow
 ```
 yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) → ADLS Gen2 (Silver) → ADF Data Flows (Transformations) → ADLS Gen2 (Gold)
