@@ -169,4 +169,4 @@ From the pipeline runs shown:
 - **Monitoring is non-negotiable**—the alert system saved me multiple times when APIs went down overnight
 - **Incremental loads** should have been implemented from day one. Learned this the hard way after processing full historical data repeatedly
 
-<u><strong>It's not the most complex pipeline out there, but it's mine, and I can explain every decision made.</strong></u>
+> **It's not the most complex pipeline out there, but it's mine, and I can explain every decision made.**
