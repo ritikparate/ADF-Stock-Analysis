@@ -161,3 +161,12 @@ From the pipeline runs shown:
   - Copy activities: 14-16 seconds
   - Notebook execution: 11 minutes (with starting cluster for first time), Otherwise 1-2 minutes
 <img width="900" height="400" alt="image" src="https://github.com/user-attachments/assets/65ee14dd-4ba6-457d-a995-9dea4f203abb" />
+
+## Key Learnings
+- **Medallion Architecture** isn't just theory—it genuinely makes debugging easier when you can trace back through layers
+- **ForEach activities** are powerful but need careful tuning. Parallel execution can backfire without proper resource allocation
+- **Data Flows** are great for complex transformations but have a learning curve. Started with copy activities, graduated to flows for advanced logic
+- **Monitoring is non-negotiable**—the alert system saved me multiple times when APIs went down overnight
+- **Incremental loads** should have been implemented from day one. Learned this the hard way after processing full historical data repeatedly
+
+<u>**It's not the most complex pipeline out there, but it's mine, and I can explain every decision made.**</u>
