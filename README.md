@@ -1,13 +1,13 @@
-# Stock Analysis with Azure Data Factory
+# 📈 Stock Analysis with Azure Data Factory
 
-## Overview
+## 🧭 Overview
 This project implements an end-to-end data pipeline on Azure to fetch, process, and analyze stock market data using the Medallion Architecture (Bronze → Silver → Gold). The pipeline handles both real-time daily stock data and historical data spanning 10 years, making it ready for analytics and business intelligence.
 Built this to get hands dirty with Azure's data engineering stack while transitioning from support engineering. The goal was simple: automate stock data collection and make it analysis-ready.
 
 ## Problem Statement
 Financial analysts and traders need clean, structured stock data for decision-making. Manually collecting and processing this data from multiple sources is time-consuming and error-prone. This pipeline automates the entire workflow—from data extraction to creating analysis-ready datasets.
 
-## Project Structure
+## 🔄 Project Structure
 ```
 stock-analysis-adf/
 ├── databricks-notebooks/
@@ -31,7 +31,7 @@ stock-analysis-adf/
 yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) → ADLS Gen2 (Silver) → ADF Data Flows (Transformations) → ADLS Gen2 (Gold)
 ```
 
-### Components
+### 🧩 Components
 - **Data Source**: yfinance API (Python library for Yahoo Finance data)
 - **Ingestion Layer**: Azure Databricks notebooks
 - **Storage**: Azure Data Lake Storage Gen2
@@ -49,7 +49,7 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 - **Monitoring**: Azure Monitor
 - **Programming**: Python and Pyspark (yfinance, pandas)
 
-## Pipeline Architecture
+## 🚀 Pipeline Architecture
 
 ### 1. Daily Data Pipeline
 **Trigger**: Runs every 2 minutes  
@@ -84,7 +84,7 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 5. **Data Flow** performs transformations (similar to daily pipeline)
 6. Direct sink to **Gold Layer** (no intermediate backups for historical data)
 
-## Technical Implementation
+## 🧪 Technical Implementation
 
 ### Data Layers Explained
 
@@ -133,7 +133,7 @@ For details:
    - Price movement thresholds
 4. **Seperate Sink(Gold and Aggregated) in single Data Flow**
 
-### Stocks Tracked
+### 📈 Stocks Tracked
 Based on the data flow screenshot, the pipeline processes major stocks including:
 - Tesla (TSLA)
 - Nvidia (NVDA)
@@ -143,7 +143,7 @@ Based on the data flow screenshot, the pipeline processes major stocks including
 
 Each stock gets its own transformation path in the data flow for parallel processing.
 
-## Monitoring & Reliability
+## 🔔 Monitoring & Reliability
 
 ### Alert Configuration
 - **Alert Rule**: "Daily Alert" monitors pipeline failures
@@ -162,7 +162,7 @@ From the pipeline runs shown:
   - Notebook execution: 11 minutes (with starting cluster for first time), Otherwise 1-2 minutes
 <img width="900" height="400" alt="image" src="https://github.com/user-attachments/assets/65ee14dd-4ba6-457d-a995-9dea4f203abb" />
 
-## Key Learnings
+## 📚 Key Learnings
 - **Medallion Architecture** isn't just theory—it genuinely makes debugging easier when you can trace back through layers
 - **ForEach activities** are powerful but need careful tuning. Parallel execution can backfire without proper resource allocation
 - **Data Flows** are great for complex transformations but have a learning curve. Started with copy activities, graduated to flows for advanced logic
