@@ -124,3 +124,12 @@ Each stock gets its own transformation path in the data flow for parallel proces
 - **Notification**: Email + Push notifications to action group
 - **Evaluation**: Monthly rate monitoring
   <img width="1200" height="600" alt="image" src="https://github.com/user-attachments/assets/eab1dd6d-9ac9-40f6-9fa5-c95a61dc447a" />
+
+### Success Metrics
+From the pipeline runs shown:
+- **Success Rate**: 100% (all activities showing green checkmarks)
+- **Average Duration**: 
+  - Data flows: 1-2 minutes
+  - Copy activities: 14-16 seconds
+  - Notebook execution: 11 minutes (with starting cluster for first time), Otherwise 1-2 minutes
+<img width="900" height="400" alt="image" src="https://github.com/user-attachments/assets/65ee14dd-4ba6-457d-a995-9dea4f203abb" />
