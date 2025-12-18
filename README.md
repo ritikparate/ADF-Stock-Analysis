@@ -23,7 +23,7 @@ stock-analysis-adf/
 │   ├── bronze/
 │   ├── silver/
 │   ├── gold/
-│   └── final-sink/
+└──   └── final-sink/
 ```
 
 ### High-Level Data Flow
