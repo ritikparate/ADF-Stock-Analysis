@@ -4,7 +4,7 @@
 This project implements an end-to-end data pipeline on Azure to fetch, process, and analyze stock market data using the Medallion Architecture (Bronze → Silver → Gold). The pipeline handles both real-time daily stock data and historical data spanning 10 years, making it ready for analytics and business intelligence.
 Built this to get hands dirty with Azure's data engineering stack while transitioning from support engineering. The goal was simple: automate stock data collection and make it analysis-ready.
 
-## Problem Statement
+## 📚 Problem Statement
 Financial analysts and traders need clean, structured stock data for decision-making. Manually collecting and processing this data from multiple sources is time-consuming and error-prone. This pipeline automates the entire workflow—from data extraction to creating analysis-ready datasets.
 
 ## 🔄 Project Structure
@@ -26,7 +26,7 @@ stock-analysis-adf/
 └──   └── final-sink/
 ```
 
-### High-Level Data Flow
+### 🔄 High-Level Data Flow
 ```
 yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) → ADLS Gen2 (Silver) → ADF Data Flows (Transformations) → ADLS Gen2 (Gold)
 ```
@@ -109,7 +109,7 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 - Optimized for downstream analytics
 - Ready for consumption by BI tools or ML models
 
-### Key Transformations in Data Flows
+### 🔧 Key Transformations in Data Flows
 
 From the screenshots, here's what happens in the Silver transformation:
 
