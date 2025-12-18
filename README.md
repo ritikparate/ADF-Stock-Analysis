@@ -40,6 +40,15 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 - **Triggers**: Azure DataFactory Triggers
 - **Monitoring**: Azure Monitor with email alerts
 
+## Tech Stack
+- **Cloud Platform**: Microsoft Azure
+- **Orchestration**: Azure Data Factory
+- **Compute**: Azure Databricks (Python notebooks)
+- **Storage**: Azure Data Lake Storage Gen2
+- **Data Processing**: ADF Data Flows (Spark-based)
+- **Monitoring**: Azure Monitor
+- **Programming**: Python and Pyspark (yfinance, pandas)
+
 ## Pipeline Architecture
 
 ### 1. Daily Data Pipeline
