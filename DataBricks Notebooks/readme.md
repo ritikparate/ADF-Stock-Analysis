@@ -6,22 +6,31 @@ This section documents the Databricks notebooks used for extracting stock market
 
 This notebook is responsible for fetching **daily stock price data** from an external stock market API and preparing it for further processing.
 
-**Key Responsibilities:**
+## **Key Responsibilities:**
 - Ingests daily stock data using API requests
 - Parses and normalizes raw JSON responses
 - Applies basic data quality checks and schema validation
 - Converts data into Spark DataFrames
 - Writes data to **Delta tables** in the Bronze layer
 
-**Technologies Used:**
+## **Technologies Used:**
 - PySpark
 - Databricks
 - Delta Lake
 - Azure Data Lake Storage (ADLS Gen2)
 
-📸 **Notebook Screenshot:**
-1. Daily Ingestion
-<img width="1920" height="4880" alt="Daily-Databricks" src="https://github.com/user-attachments/assets/5c204c69-d27c-423a-aeb5-f908b05c82e5" />
-
-2. Historical Data Ingestion
-<img width="1920" height="5191" alt="Historical-Databricks" src="https://github.com/user-attachments/assets/ff6cc1cb-1f0b-4e5c-a193-75203e94755b" />
+## 📸 **Notebook Screenshot:**
+<table>
+  <tr>
+    <th>Daily Stock Ingestion</th>
+    <th>Historical Stock Ingestion</th>
+  </tr>
+  <tr>
+    <td>
+      <img src="https://github.com/user-attachments/assets/9ff03b9f-206e-4b2b-8ae6-7aeb106bf105"  width="100%">
+    </td>
+    <td>
+      <img src="https://github.com/user-attachments/assets/1883490c-40c2-42a3-9222-edbdb9e16f04" width="100%">
+    </td>
+  </tr>
+</table>
