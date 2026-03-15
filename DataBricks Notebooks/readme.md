@@ -28,6 +28,7 @@ This notebook is responsible for fetching **daily stock price data** from an ext
   <tr>
     <td>
       <img src="https://github.com/user-attachments/assets/9ff03b9f-206e-4b2b-8ae6-7aeb106bf105"  width="100%">
+      
     </td>
     <td>
       <img src="https://github.com/user-attachments/assets/1883490c-40c2-42a3-9222-edbdb9e16f04" width="100%">
