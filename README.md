@@ -2,7 +2,7 @@
 
 ## 🧭 Overview
 This project implements an end-to-end data pipeline on Azure to fetch, process, and analyze stock market data using the Medallion Architecture (Bronze → Silver → Gold). The pipeline handles both real-time daily stock data and historical data spanning 10 years, making it ready for analytics and business intelligence.
-Built this to get hands dirty with Azure's data engineering stack while transitioning from support engineering. The goal was simple: automate stock data collection and make it analysis-ready.
+Built this to get hands dirty with Azure data engineering stack while transitioning from ETL development. The goal was simple: automate stock data collection and make it analysis-ready.
 
 ## 📚 Problem Statement
 Financial analysts and traders need clean, structured stock data for decision-making. Manually collecting and processing this data from multiple sources is time-consuming and error-prone. This pipeline automates the entire workflow—from data extraction to creating analysis-ready datasets.
@@ -28,7 +28,7 @@ stock-analysis-adf/
 
 ### 🔄 High-Level Data Flow
 ```
-yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) → ADLS Gen2 (Silver) → ADF Data Flows (Transformations) → ADLS Gen2 (Gold)
+yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) → ADLS Gen2 (Silver) → ADF Data Flows (Transformations) → ADLS Gen2 (Gold) → Data Ready for Analysis
 ```
 
 ### 🧩 Components
@@ -81,7 +81,7 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 2. Data stored in Bronze Layer by ticker
 3. **Get Metadata** retrieves all historical folders
 4. **ForEach + Copy Data** activities process each ticker
-5. **Data Flow** performs transformations (similar to daily pipeline)
+5. **Data Flow** performs transformations (similar to the daily pipeline)
 6. Direct sink to **Gold Layer** (no intermediate backups for historical data)
 
 ## 🧪 Technical Implementation
@@ -92,11 +92,11 @@ yfinance API → Azure Databricks → ADLS Gen2 (Bronze) → ADF (Processing) �
 - Unprocessed data exactly as received from yfinance
 - Removed some unnecessary columns
 - Partitioned by date and ticker symbol
-- Serves as source of truth for reprocessing
+- Serves as a source of truth for reprocessing
 
 **Silver Layer (Cleansed)**
 - Cleaned and validated data
-- Added columns like, Price change, Price Range for day, Volume, etc.
+- Added columns like Price change, Price Range for day, Volume, etc.
 - Applied transformations:
   - Missing value handling
   - Date type conversions
@@ -134,7 +134,7 @@ For details:
 4. **Seperate Sink(Gold and Aggregated) in single Data Flow**
 
 ### 📈 Stocks Tracked
-Based on the data flow screenshot, the pipeline processes major stocks including:
+Based on the data flow screenshot, the pipeline processes major stocks, including:
 - Tesla (TSLA)
 - Nvidia (NVDA)
 - Apple (AAPL)
@@ -159,7 +159,7 @@ From the pipeline runs shown:
 - **Average Duration**: 
   - Data flows: 1-2 minutes
   - Copy activities: 14-16 seconds
-  - Notebook execution: 11 minutes (with starting cluster for first time), Otherwise 1-2 minutes
+  - Notebook execution: 11 minutes (with starting cluster for first time), otherwise 1-2 minutes
 <img width="900" height="400" alt="image" src="https://github.com/user-attachments/assets/65ee14dd-4ba6-457d-a995-9dea4f203abb" />
 
 ## 📚 Key Learnings
